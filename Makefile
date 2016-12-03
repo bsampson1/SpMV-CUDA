@@ -1,16 +1,16 @@
 .PHONY: all test run run-test clean
 
 all:
-	nvcc -I./include -o bin/main src/main.cu src/spmv.cu
+	nvcc -I./include -o main src/main.cu src/spmv.cu
 
 test:
-	nvcc -I./include -o bin/test test/test.cu src/spmv.cu
+	nvcc -I./include -o test src/test.cu src/spmv.cu
 
 run:
-	@./bin/main
+	@./main
 
 run-test:
-	@./bin/test
+	@./test
 
 clean:
-	$(RM) bin/*
+	$(RM) main test

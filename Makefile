@@ -28,4 +28,4 @@ run:
 	@./$(EXEC)
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(EXEC)

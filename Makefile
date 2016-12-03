@@ -1,31 +1,16 @@
-# define the C compiler to use
-CC = nvcc
+.PHONY: all test run run-test clean
 
-# define project directory structure
-SRCDIR = src
-BINDIR = bin
-TESTDIR = test
+all:
+	nvcc -I./include -o bin/main src/main.cu src/spmv.cu
 
-# the build target executable
-TARGET = main
-EXEC = $(BINDIR)/$(TARGET)
-
-# define source files in project
-SOURCES := $(wildcard $(SRCDIR)/*.cu)
-
-# define include directory other than /usr/include
-INCLUDE = -I./include
-
-# define remove for cleaning
-RM = rm -f
-
-all: $(TARGET)
-
-$(TARGET):
-	$(CC) $(INCLUDE) -o $(EXEC) $(SOURCES)
+test:
+	nvcc -I./include -o bin/test test/test.cu src/spmv.cu
 
 run:
-	@./$(EXEC)
+	@./bin/main
+
+run-test:
+	@./bin/test
 
 clean:
-	$(RM) $(EXEC)
+	$(RM) bin/*

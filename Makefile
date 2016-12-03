@@ -7,7 +7,8 @@ BINDIR = bin
 TESTDIR = test
 
 # the build target executable
-TARGET = $(BINDIR)/main
+TARGET = main
+EXEC = $(BINDIR)/$(TARGET)
 
 # define source files in project
 SOURCES := $(wildcard $(SRCDIR)/*.cu)
@@ -21,10 +22,10 @@ RM = rm -f
 all: $(TARGET)
 
 $(TARGET):
-	$(CC) $(INCLUDE) -o $(TARGET) $(SOURCES)
+	$(CC) $(INCLUDE) -o $(EXEC) $(SOURCES)
 
 run:
-	./$(TARGET)
+	@./$(EXEC)
 
 clean:
 	$(RM) $(TARGET)

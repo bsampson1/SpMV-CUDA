@@ -1,5 +1,6 @@
 #include "spmv.h"
 #include <stdio.h>
+#include <array>
 
 void printSpMatrix(const SpMatrix S)
 {
@@ -25,4 +26,10 @@ void printSpMatrix(const SpMatrix S)
                 }
                 printf("\n");
         }
+}
+
+SpMatrix generateSpMatrix(const int M, const int N, const double p_diag, const double p_nondiag)
+{
+        SpMatrix S;
+        return S;
 }

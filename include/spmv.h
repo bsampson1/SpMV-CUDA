@@ -17,16 +17,23 @@ typedef struct
  *      JA - pointer to column index array (length NNZ)
  */
 
+void printArray(const float* arr, const int l);
+/* Used to print A array from CSR formatted sparse matrix
+ */
+
+void printArray(const int* arr, const int l);
+/* Used to print IA & JA array from CSR formatted sparse matrix
+ */
+
 void printSpMatrix(const SpMatrix S);
 /* Takes in a sparse matrix in CSR format and prints the entire matrix using printf
  * WARNING: DO NOT USE THIS FUNCTION FOR LARGE MATRICES
  *      S - input sparse matrix
  */
 
-SpMatrix generateSpMatrix(const int M, const int N, const double p_diag, const double p_nondiag);
+SpMatrix generateSquareSpMatrix(const int N, const double p_diag, const double p_nondiag);
 /* Takes in a MxN size and two probabilities and generates one realization of a sparse matrix
- *      M - number of rows
- *      N - number of columns
+ *      N - number of row (and columns)
  *      p_diag - probability of non-zero element on main diagonal
  *      p_nondiag - probability of non-zero element not on main diagonal
  */

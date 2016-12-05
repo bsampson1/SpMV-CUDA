@@ -1,24 +1,6 @@
 #include "spmv.h"
 #include <stdio.h>
 
-void printArray(const float* arr, const int l)
-{
-        int i;
-        printf("[ ");
-        for (i = 0; i < l; ++i)
-                printf("%g ", arr[i]);
-        printf("]\n");
-}
-
-void printArray(const int* arr, const int l)
-{
-        int i;
-        printf("[ ");
-        for (i = 0; i < l; ++i)
-                printf("%i ", arr[i]);
-        printf("]\n");
-}
-
 int main()
 {
 

@@ -2,6 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+//__global__
+//void spmv(float* y, const SpMatrix A, const float* x)
+//{
+//        int row = threadIdx.x;
+//        float sum = 0;
+//        for (j = A.IA[row]; j < A.IA[row+1]; ++j)
+//        {
+//               sum += A.A[j]*x[A.JA[j]];
+//        }
+//        y[row] = sum;
+//}
+
+
 void cpuSpMV(float* y, const SpMatrix A, const float* x)
 {
         int i, j;

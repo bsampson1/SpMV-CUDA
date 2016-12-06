@@ -165,8 +165,9 @@ SpMatrix generateSquareSpMatrix(const int N, const double p_diag, const double p
 
 void fillDenseVector(float* v, const int N)
 {
-        printf("Entered fillDenseVector(...)\n");
-        return;
+        int i;
+        for (i = 0; i < N; ++i)
+                v[i] = (float)(rand()%10) - 5;
 }
 
 

@@ -162,3 +162,19 @@ SpMatrix generateSquareSpMatrix(const int N, const double p_diag, const double p
         // return SpMatrix
         return S;
 }
+
+void fillDenseVector(float* v, const int N)
+{
+        printf("Entered fillDenseVector(...)\n");
+        return;
+}
+
+
+
+
+
+
+
+
+
+

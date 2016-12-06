@@ -38,4 +38,10 @@ SpMatrix generateSquareSpMatrix(const int N, const double p_diag, const double p
  *      p_nondiag - probability of non-zero element not on main diagonal
  */
 
+void fillDenseVector(float* v, const int N);
+/* Takes in a pointer, v, to a 1-D vector and a length N and fills it with random values
+ * v - input vector pointer
+ * N - input vector length
+ */
+
 #endif

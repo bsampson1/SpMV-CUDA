@@ -2,44 +2,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void cpuSpMV(Vector* y, const SpMatrix* A, const Vector* x)
+void cpuSpMV(float* y, const SpMatrix A, const float* x)
 {
-    int i, j, y, x;
-    for (i=0; i<S.M; ++i)
-    {
-        for (j=IA[i]; j<IA[i+1]; ++j)
+        int i, j;
+        float sum;
+        for (i = 0; i < A.M; ++i)
         {
-            y[i] += values[j]*x[JA[j]];
+                sum = 0;
+                for (j = A.IA[i]; j < A.IA[i+1]; ++j)
+                {
+                        sum += A.A[j]*x[A.JA[j]];
+                }
+                y[i] = sum;
         }
-    }
 }
 
-bool areEqual(const Vector*a, const Vector*b)
+bool areEqual(const float* a, const float* b, const int N)
 {
-    for (i = 0; i<row1; ++i)
-    {
-        for (j=0; j<column2; ++j)
-        {
-            if (a[i][j] != b[i][j])
-            {
-                pass;
-            }
-        }
-    }
+        int i;
+        for (i = 0; i < N; ++i)
+                if (a[i] != b[i])
+                        return 0;
+        return 1;
 }
-bool areEqual(const SpMatrix*A, const SpMatrix*B)
+
+bool areEqual(const SpMatrix A, const SpMatrix B)
 {
-    for (i = 0; i<row1; ++i)
-    {
-        for (j=0; j<column2; ++j)
+        int i;
+        
+        if (A.NNZ != B.NNZ)
+                return 0;
+        if (A.M != B.M)
+                return 0;
+        if (A.N != B.N)
+                return 0;
+        
+        //check IA
+        for (i = 0; i < A.M+1; ++i)
         {
-            if (a[i][j] != b[i][j])
-            {
-                pass;
-            }
+                if (A.IA[i] != B.IA[i])
+                        return 0;
         }
-    }
+
+        // check A, JA
+        for (i = 0; i < A.NNZ; ++i)
+        {
+                if (A.A[i] != B.A[i])
+                        return 0;
+                if (A.JA[i] != B.JA[i])
+                        return 0;
+        }
+        return 1;
 }
+
 void printArray(const float* arr, const int l)
 {
         int i;

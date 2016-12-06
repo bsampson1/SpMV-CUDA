@@ -2,7 +2,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void cpuSpMV(Vector* y, const SpMatrix* A, const Vector* x)
+{
+    int i, j, y, x;
+    for (i=0; i<S.M; ++i)
+    {
+        for (j=IA[i]; j<IA[i+1]; ++j)
+        {
+            y[i] += values[j]*x[JA[j]];
+        }
+    }
+}
 
+bool areEqual(const Vector*a, const Vector*b)
+{
+    for (i = 0; i<row1; ++i)
+    {
+        for (j=0; j<column2; ++j)
+        {
+            if (a[i][j] != b[i][j])
+            {
+                pass;
+            }
+        }
+    }
+}
+bool areEqual(const SpMatrix*A, const SpMatrix*B)
+{
+    for (i = 0; i<row1; ++i)
+    {
+        for (j=0; j<column2; ++j)
+        {
+            if (a[i][j] != b[i][j])
+            {
+                pass;
+            }
+        }
+    }
+}
 void printArray(const float* arr, const int l)
 {
         int i;

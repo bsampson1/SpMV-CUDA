@@ -162,3 +162,20 @@ SpMatrix generateSquareSpMatrix(const int N, const double p_diag, const double p
         // return SpMatrix
         return S;
 }
+
+void fillDenseVector(float* v, const int N)
+{
+        int i;
+        for (i = 0; i < N; ++i)
+                v[i] = (float)(rand()%10) - 5;
+}
+
+
+
+
+
+
+
+
+
+

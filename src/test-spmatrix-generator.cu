@@ -1,5 +1,4 @@
 #include "spmv.h"
-#include <stdio.h>
 
 int main()
 {

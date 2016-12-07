@@ -8,7 +8,7 @@ int main()
         double p_diag = 0.8;
         double p_nondiag = 0.05;
         int N = 4;
-        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu;
+        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y, *x;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
 
@@ -69,10 +69,11 @@ int main()
 
     //spmvSimple(y, A, IA, JA, x);
     //cpuSpMV(y, A, x);
+    int i,j, IA, JA, A, M;
+    float sum, *y, *x;
     int row = threadIdx.x;
     y[row] = 0;
-    int i,j, IA, JA, A;
-    float sum, *y, *A, *x;
+
 
     for (j = IA[row]; j < IA[row+1]; ++j)
     {

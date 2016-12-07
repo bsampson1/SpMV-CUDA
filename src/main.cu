@@ -12,6 +12,10 @@ int main()
         printf("Sparse Matrix A: \n");
         printSpMatrix(A);
 
+        cudaEvent_t start, stop;
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
+
         // Generate dense vector x
         float* x = (float *)malloc(sizeof(float)*N);
         fillDenseVector(x, N);
@@ -21,11 +25,18 @@ int main()
         float* y = (float *)malloc(sizeof(float)*N);
 
         // Compute spmv multiplication
+        cudaEventRecord(start);
         cpuSpMV(y, A, x);
+        cudaEventRecord(stop);
 
         // Print result
+
+        float milliseconds = 0;
+        cudaEventElaspedTime(milliseconds, start, stop);
+
         printf("Output vector y: "); printArray(y, N);
-        
+        printf("Elasped time (ms): %f|n", milliseconds);
+
 
         // Free memory
         free(A.IA);

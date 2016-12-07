@@ -12,7 +12,7 @@ test-spmatrix-generator:
 	nvcc -I./include -o test-spmatrix-generator src/test-spmatrix-generator.cu src/spmv.cu
 
 run:
-	@./main
+	@srun -N1 --gres=gpu:1 ./main
 
 run-all-tests: run-test-spmatrix-struct test-spmatrix-generator
 

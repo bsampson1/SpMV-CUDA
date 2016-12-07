@@ -31,7 +31,7 @@ void cpuSpMV(float* y, const SpMatrix A, const float* x);
 */
 
 __global__
-void spmvSimple(float* y, const SpMatrix A, const float* x);
+void spmvSimple(float * y, const float *A, const int *IA, const int *JA, const float *x);
 /* Sparse matrix-vector multiplication for GPU
  * One thread computes one element of output vector
  *      y - output vector (M x 1)
@@ -53,12 +53,15 @@ bool areEqual(const SpMatrix A, const SpMatrix B);
         A, B - sparse matrices
 */
 
+void printSpMatrix(const float* A, const int* IA, const int* JA, const int M, const int N);
 void printSpMatrix(const SpMatrix S);
 /* Takes in a sparse matrix in CSR format and prints the entire matrix using printf
  * WARNING: DO NOT USE THIS FUNCTION FOR LARGE MATRICES
  *      S - input sparse matrix
  */
 
+// DOESN'T WORK YET...
+void generateSquareSpMatrix(float* A, int* IA, int* JA, int* NNZ, const int N, const double p_diag, const double p_nondiag);
 SpMatrix generateSquareSpMatrix(const int N, const double p_diag, const double p_nondiag);
 /* Takes in a MxN size and two probabilities and generates one realization of a sparse matrix
  *      N - number of row (and columns)

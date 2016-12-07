@@ -54,6 +54,7 @@ int main()
         //cpuSpMV(y, A, x);
         spmvSimple<<<1, N>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu); // supports only up to 1024
         cudaEventRecord(stop);
+        cudaEventSynchronize(stop);
 
         // Print result
         float milliseconds = 0;

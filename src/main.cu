@@ -32,10 +32,10 @@ int main()
         // Print result
 
         float milliseconds = 0;
-        cudaEventElaspedTime(&milliseconds, start, stop);
+        cudaEventElapsedTime(&milliseconds, start, stop);
 
         printf("Output vector y: "); printArray(y, N);
-        printf("Elasped time (ms): %f\n", milliseconds);
+        printf("Elapsed time (ms): %f\n", milliseconds);
 
 
         // Free memory

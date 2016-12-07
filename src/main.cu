@@ -66,13 +66,13 @@ int main()
         printf("Output vector y: "); printArray(y_cpu, N);
 //Calculate the result with the normal CPU implementation and compare the results with the GPU(Test)
 //GPU first & then CPU
-__global__
-    spmvSimple(y, A, IA, JA, x);
-    cpuSpMV(y, A, x);
+
+    //spmvSimple(y, A, IA, JA, x);
+    //cpuSpMV(y, A, x);
     int row = threadIdx.x;
     y[row] = 0;
-    int i,j;
-    float sum;
+    int i,j, IA, JA, A;
+    float sum, *y, *A, *x;
 
     for (j = IA[row]; j < IA[row+1]; ++j)
     {

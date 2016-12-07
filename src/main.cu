@@ -8,7 +8,7 @@ int main()
         double p_diag = 0.8;
         double p_nondiag = 0.05;
         int N = 4;
-        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y, *x;
+        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
 

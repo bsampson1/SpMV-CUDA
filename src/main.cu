@@ -64,6 +64,40 @@ int main()
         // Transfer to host
         cudaMemcpy(y_cpu, y_gpu, N*sizeof(float), cudaMemcpyDeviceToHost);
         printf("Output vector y: "); printArray(y_cpu, N);
+//Calculate the result with the normal CPU implementation and compare the results with the GPU(Test)
+//GPU first & then CPU
+
+//int row = threadIdx.x;
+//y[row] = 0;
+//int j;
+    for (j = IA[row]; j < IA[row+1]; ++j)
+    {
+        y[row] += A[j]*x[JA[j]];
+    }
+    int compare = 0;
+    for (i = 0; i < A.M; ++i)
+    {
+        sum = 0;
+        for (j = A.IA[i]; j < A.IA[i+1]; ++j)
+        {
+            sum += A.A[j]*x[A.JA[j]];
+        }
+            y[i] = sum;
+            if (y[row]==y[i])
+            {
+                compare++;
+            }else{
+                compare+=0;
+            }
+
+    }
+    if(compare == M*N){
+        printf("Success!\n");
+    }else{
+        printf("Error!\n");
+    }
+/.*==============================FinishTest=========================================*/
+
 
         // Free memory
         free(A_cpu);

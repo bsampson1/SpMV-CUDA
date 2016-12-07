@@ -1,10 +1,7 @@
 #include "spmv.h"
 #include <stdio.h>
 #include <stdlib.h>
-<<<<<<< HEAD
 
-=======
->>>>>>> 202598f5763748e4279349370dd8a88187d823a5
 int main()
 {
         double p_diag = 0.8;
@@ -34,18 +31,11 @@ int main()
         cudaEventRecord(stop);
 
         // Print result
-
-<<<<<<< HEAD
-        float* milliseconds = 0;
-        cudaEventElapsedTime(milliseconds, start, stop);
-=======
         float milliseconds = 0;
         cudaEventElapsedTime(&milliseconds, start, stop);
->>>>>>> 202598f5763748e4279349370dd8a88187d823a5
 
         printf("Output vector y: "); printArray(y, N);
         printf("Elapsed time (ms): %f\n", milliseconds);
-
 
         // Free memory
         free(A.IA);

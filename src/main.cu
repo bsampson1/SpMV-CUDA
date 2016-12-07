@@ -1,6 +1,6 @@
 #include "spmv.h"
 #include <stdio.h>
-
+#include <stdlib.h>
 int main()
 {
         double p_diag = 0.8;
@@ -32,10 +32,10 @@ int main()
         // Print result
 
         float milliseconds = 0;
-        cudaEventElaspedTime(milliseconds, start, stop);
+        cudaEventElaspedTime(&milliseconds, start, stop);
 
         printf("Output vector y: "); printArray(y, N);
-        printf("Elasped time (ms): %f|n", milliseconds);
+        printf("Elasped time (ms): %f\n", milliseconds);
 
 
         // Free memory

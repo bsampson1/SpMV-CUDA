@@ -5,7 +5,7 @@
 __global__
 void spmvSimple(float* y, const float *A, const int *IA, const int *JA, const float *x)
 {
-        int row = threadIdx.x;
+        int row = threadIdx.x + blockDim.x * blockIdx.x;
         y[row] = 0;
         int j;
         for (j = IA[row]; j < IA[row+1]; ++j)

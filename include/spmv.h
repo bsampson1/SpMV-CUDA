@@ -39,9 +39,7 @@ void spmvSimple(float * y, const float *A, const int *IA, const int *JA, const f
  *      x - input vector  (N x 1)
  */
 
-
-
-bool areEqual(const float* a, const float* b);
+bool areEqual(const float* a, const float* b, const int N);
 /* Tests whether or not two vectors are equal. Returns 0 if they
  * are not equal and returns 1 if they are
  *      a, b - input vectors

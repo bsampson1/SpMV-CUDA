@@ -7,10 +7,13 @@ int main()
         // PARAMETERS
         double p_diag = 0.8;
         double p_nondiag = 0.05;
-        int N = 4;
-        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu;
+        int N = (1 << 12);
+        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
+
+
+        printf("Computing spmv for %ix%i sparse matrix\n", N, N);
 
         // Define cuda events
         cudaEvent_t start, stop;
@@ -22,15 +25,15 @@ int main()
         IA_cpu = S.IA; A_cpu = S.A; JA_cpu = S.JA; NNZ = S.NNZ;
 
         // Verify correctness by hand
-        printf("Sparse Matrix S: \n"); printSpMatrix(S);
-        printf("A: "); printArray(A_cpu, NNZ);
-        printf("IA: "); printArray(IA_cpu, N+1);
-        printf("JA: "); printArray(JA_cpu, NNZ);
+        //printf("Sparse Matrix S: \n"); printSpMatrix(S);
+        //printf("A: "); printArray(A_cpu, NNZ);
+        //printf("IA: "); printArray(IA_cpu, N+1);
+        //printf("JA: "); printArray(JA_cpu, NNZ);
 
         // Generate dense vector x
         x_cpu = (float *)malloc(sizeof(float)*N);
         fillDenseVector(x_cpu, N);
-        printf("Dense vector x: "); printArray(x_cpu, N);
+        //printf("Dense vector x: "); printArray(x_cpu, N);
         
         // Define output vector y
         y_cpu = (float *)malloc(sizeof(float)*N);
@@ -49,10 +52,25 @@ int main()
         cudaMemcpy(JA_gpu, JA_cpu, NNZ*sizeof(int), cudaMemcpyHostToDevice);
         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
 
-        // Compute spmv multiplication
+        // CUDA kernel parameters
+        int threadsPerBlock, blocksPerGrid;
+        if (N < 1024)
+        {
+                threadsPerBlock = N;
+                blocksPerGrid = 1;
+        }
+        else
+        {
+                threadsPerBlock = 1024;
+                blocksPerGrid = N / 1024;
+        }
+
+        // Start cudaEvent timing
         cudaEventRecord(start);
-        //cpuSpMV(y, A, x);
-        spmvSimple<<<1, N>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu); // supports only up to 1024
+        
+        // CUDA Kernel - compute spmv multiplication
+        spmvSimple<<<blocksPerGrid, threadsPerBlock>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu); // supports well over 2^20
+        
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
 
@@ -63,7 +81,16 @@ int main()
 
         // Transfer to host
         cudaMemcpy(y_cpu, y_gpu, N*sizeof(float), cudaMemcpyDeviceToHost);
-        printf("Output vector y: "); printArray(y_cpu, N);
+        //printf("Output vector y: "); printArray(y_cpu, N);
+
+        // Verify correctness of CUDA kernel
+        y_correct = (float *)malloc(sizeof(float)*N);
+        cpuSpMV(y_correct, S, x_cpu);
+        //printf("Correct output vector y_correct: "); printArray(y_correct, N);
+        if (areEqual(y_correct, y_cpu, N))
+                printf("They are equal!\n");
+        else
+                printf("They are NOT equal!\n");
 
         // Free memory
         free(A_cpu);
@@ -71,6 +98,7 @@ int main()
         free(JA_cpu);
         free(x_cpu);
         free(y_cpu);
+        free(y_correct);
         cudaFree(A_gpu);
         cudaFree(IA_gpu);
         cudaFree(JA_gpu);

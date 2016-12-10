@@ -58,7 +58,7 @@ void printArray(const int* arr, const int l)
 
 bool areEqualRMSE(const float *a, const float *b, const int N)
 {
-        double RMSE_THRESHOLD = 1e-5;
+        double RMSE_THRESHOLD = 1e-3;
         double sq_err_sum = 0; double rmse;
         int i;
         for (i = 0; i < N; ++i)
@@ -66,6 +66,10 @@ bool areEqualRMSE(const float *a, const float *b, const int N)
                 sq_err_sum += (a[i] - b[i])*(a[i] - b[i]);
         }
         rmse = sqrt(sq_err_sum/N);
+        
+        if (rmse > RMSE_THRESHOLD)
+                printf("RMSE = %g\n", rmse);
+
         return rmse < RMSE_THRESHOLD;
 }
 

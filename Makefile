@@ -23,7 +23,7 @@ run-test-spmatrix-generator:
 	@srun -N1 ./test-spmatrix-generator
 
 run-test-spmv-timing:
-	@srun -N1 --gres=gpu:1 ./test-spmv-timing
+	@srun -p cpeg655 -t 00:20:00 -J spmv -N 1 --gres=gpu:1 ./test-spmv-timing
 
 run-test-spmv-correctness:
 	@srun -N1 --gres=gpu:1 ./test-spmv-correctness

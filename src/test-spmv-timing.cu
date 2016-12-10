@@ -1,20 +1,32 @@
 #include "spmv.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 int main()
 {
         // PARAMETERS
         double p_diag = 0.9;
-        double p_nondiag = 0.001;
+        double p_nondiag = 0.1;
         float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
 
+        int expNmin = 1;
+        int expNmax = 15;
+        int Nmin = (1 << expNmin);
+        int Nmax = (1 << expNmax);
+        int L = expNmax-expNmin+1; //printf("L = %i\n", L);
+        float *t_arr = (float *)malloc(sizeof(float)*L);
+        int *N_arr = (int *)malloc(sizeof(float)*L);
+        int i; int idx = 0;
+        for (i = 0; i < L; ++i)
+                N_arr[i] = (1 << (i+1));
+
         // seed random number generator
         time_t t; srand((unsigned) time(&t));
 
-        const int NUM_ITERS = 20;
+        const int NUM_ITERS = 1;
 
         // Define cuda events
         float milliseconds;
@@ -22,15 +34,8 @@ int main()
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
         
-        float *timing_results = (float *)malloc(sizeof(float)*14);
-        int *N_timing = (int *)malloc(sizeof(int)*14);
-        int i;
-        for (i = 0; i < 14; ++i)
-                N_timing[i] = (1 << (i+1));
-        int timing_i = 0;
-
         int N, iter; double elapsed;
-        for (N = 2; N <= (1 << 14); N=N*2)
+        for (N = Nmin; N <= Nmax; N=N*2)
         {
                 elapsed = 0;
                 for (iter = 0; iter < NUM_ITERS; ++iter)
@@ -82,6 +87,11 @@ int main()
                         cudaEventRecord(stop);
                         cudaEventSynchronize(stop);
 
+                        // Check to make sure that cuda kernel was successful
+                        cudaError_t err = cudaGetLastError();
+                        if (err != cudaSuccess)
+                                printf("Error: %s\n", cudaGetErrorString(err));
+
                         // Print result
                         milliseconds = 0;
                         cudaEventElapsedTime(&milliseconds, start, stop);
@@ -108,14 +118,16 @@ int main()
                         cudaFree(x_gpu);
                         cudaFree(y_gpu);
                 }
-                printf("Average performace of N = %i SpMV over %i iterations: %g ms\n", N, NUM_ITERS, elapsed/NUM_ITERS);
-                timing_results[timing_i] = (float)elapsed/NUM_ITERS;
-                timing_i++;
+                //printf("Average performace of N = %i SpMV over %i iterations: %g ms\n", N, NUM_ITERS, elapsed/NUM_ITERS);
+                t_arr[idx++] = (float)elapsed/NUM_ITERS;
         }
 
-        printf("N = "); printArray(N_timing, 14);
-        printf("t = "); printArray(timing_results, 14);
+        printf("N = "); printArray(N_arr, L);
+        printf("t = "); printArray(t_arr, L);
         
+        free(t_arr);
+        free(N_arr);
+
         cudaDeviceReset();
 	return 0;
 }

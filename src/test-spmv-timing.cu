@@ -5,8 +5,8 @@
 int main()
 {
         // PARAMETERS
-        double p_diag = 0.8;
-        double p_nondiag = 0.05;
+        double p_diag = 0.9;
+        double p_nondiag = 0.001;
         float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu;//, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
@@ -20,13 +20,12 @@ int main()
         cudaEventCreate(&stop);
         
         int N, iter;
-        for (N = 2; N < (1 << 15)+1; N=N*2)
+        for (N = 2; N <= (1 << 15); N=N*2)
         {
                 for (iter = 0; iter < NUM_ITERS; ++iter)
                 {
                         // Create sparse matrix
-                        SpMatrix S = generateSquareSpMatrix(N, p_diag, p_nondiag); // allocates!
-                        IA_cpu = S.IA; A_cpu = S.A; JA_cpu = S.JA; NNZ = S.NNZ;
+                        generateSquareSpMatrix(&A_cpu, &IA_cpu, &JA_cpu, &NNZ, N, p_diag, p_nondiag); // allocates!
 
                         // Generate dense vector x
                         x_cpu = (float *)malloc(sizeof(float)*N);
@@ -99,13 +98,7 @@ int main()
                         cudaFree(JA_gpu);
                         cudaFree(x_gpu);
                         cudaFree(y_gpu);
-
-                        // Set dangling pointers to NULL
-                        S.A = NULL;
-                        S.IA = NULL;
-                        S.JA = NULL;
                 }
-
         }
         
         cudaDeviceReset();

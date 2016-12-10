@@ -5,13 +5,12 @@
 int main()
 {
         // PARAMETERS
-        double p_diag = 0.8;
-        double p_nondiag = 0.05;
+        double p_diag = 0.9;
+        double p_nondiag = 0.001;
         int N = (1 << 12);
         float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
-
 
         printf("Computing spmv for %ix%i sparse matrix\n", N, N);
 
@@ -21,8 +20,7 @@ int main()
         cudaEventCreate(&stop);
 
         // Create sparse matrix
-        SpMatrix S = generateSquareSpMatrix(N, p_diag, p_nondiag); // allocates!
-        IA_cpu = S.IA; A_cpu = S.A; JA_cpu = S.JA; NNZ = S.NNZ;
+        generateSquareSpMatrix(&A_cpu, &IA_cpu, &JA_cpu, &NNZ, N, p_diag, p_nondiag); // allocates!
 
         // Verify correctness by hand
         //printf("Sparse Matrix S: \n"); printSpMatrix(S);
@@ -85,12 +83,8 @@ int main()
 
         // Verify correctness of CUDA kernel
         y_correct = (float *)malloc(sizeof(float)*N);
-        cpuSpMV(y_correct, S, x_cpu);
+        cpuSpMV(y_correct, A_cpu, IA_cpu, JA_cpu, N, x_cpu);
         //printf("Correct output vector y_correct: "); printArray(y_correct, N);
-        if (areEqual(y_correct, y_cpu, N))
-                printf("They are equal!\n");
-        else
-                printf("They are NOT equal!\n");
 
         // Free memory
         free(A_cpu);
@@ -104,11 +98,6 @@ int main()
         cudaFree(JA_gpu);
         cudaFree(x_gpu);
         cudaFree(y_gpu);
-
-        // Set dangling pointers to NULL
-        S.A = NULL;
-        S.IA = NULL;
-        S.JA = NULL;
 
         cudaDeviceReset();
 	return 0;

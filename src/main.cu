@@ -11,6 +11,9 @@ int main()
         float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
+ 
+        // seed random number generator
+        time_t t; srand((unsigned) time(&t));
 
         printf("Computing spmv for %ix%i sparse matrix\n", N, N);
 

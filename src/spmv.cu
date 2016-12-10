@@ -11,6 +11,8 @@ void spmvSimple(float* y, const float *A, const int *IA, const int *JA, const fl
         int j;
         for (j = IA[row]; j < IA[row+1]; ++j)
                 y[row] += A[j]*x[JA[j]];
+
+        __syncthreads();
 }
 
 void cpuSpMV(float *y, float *A, int *IA, int *JA, const int M, const float *x)
@@ -31,9 +33,13 @@ void cpuSpMV(float *y, float *A, int *IA, int *JA, const int M, const float *x)
 void printArray(const float* arr, const int l)
 {
         int i;
-        printf("[ ");
+        printf("[");
         for (i = 0; i < l; ++i)
-                printf("%g; ", arr[i]);
+        {
+                printf("%g", arr[i]);
+                if (i != l-1)
+                        printf("; ");
+        }
         printf("];\n");
 }
 
@@ -42,8 +48,25 @@ void printArray(const int* arr, const int l)
         int i;
         printf("[ ");
         for (i = 0; i < l; ++i)
-                printf("%i; ", arr[i]);
+        {
+                printf("%i", arr[i]);
+                if (i != l-1)
+                        printf("; ");
+        }
         printf("];\n");
+}
+
+bool areEqualRMSE(const float *a, const float *b, const int N)
+{
+        double RMSE_THRESHOLD = 1e-5;
+        double sq_err_sum = 0; double rmse;
+        int i;
+        for (i = 0; i < N; ++i)
+        {
+                sq_err_sum += (a[i] - b[i])*(a[i] - b[i]);
+        }
+        rmse = sqrt(sq_err_sum/N);
+        return rmse < RMSE_THRESHOLD;
 }
 
 void printSpMatrix(const float* A, const int* IA, const int* JA, const int M, const int N)
@@ -90,9 +113,7 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
         float* A_temp = (float *)malloc(sizeof(float)*bufferSize);
         int* JA_temp = (int *)malloc(sizeof(float)*bufferSize);
         
-        // seed random number generator
-        time_t t; double randProb; float randNum;
-        srand((unsigned) time(&t));
+        double randProb; float randNum;
 
         // Setup inital conditions for sparse matrix
         *NNZ_p = 0; (*IA_p)[0] = 0;
@@ -117,7 +138,7 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
                                         }
                                         
                                         // Place random non-zero element into sparse matrix
-                                        randNum = (float)(rand()%10)+1;
+                                        randNum = getRandomFloat(0, 1);
                                         A_temp[(*NNZ_p)] = randNum;
                                         JA_temp[(*NNZ_p)] = j;
                                         (*IA_p)[i+1]++;
@@ -136,7 +157,7 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
                                         }
                                         
                                         // Place random non-zero element into sparse matrix
-                                        randNum = (float)(rand()%10)+1;
+                                        randNum = getRandomFloat(0, 1);;
                                         A_temp[(*NNZ_p)] = randNum;
                                         JA_temp[(*NNZ_p)] = j;
                                         (*IA_p)[i+1]++;
@@ -211,11 +232,16 @@ void resizeSpMatrixArraysAndCopy(float **A_temp_p, int **JA_temp_p, int *bufferS
         *bufferSize_p = newLength;
 }
 
+float getRandomFloat(const float min, const float max)
+{
+        return ((((float)rand())/RAND_MAX)*(max-min)+min);
+}
+
 void fillDenseVector(float* v, const int N)
 {
         int i;
         for (i = 0; i < N; ++i)
-                v[i] = (float)(rand()%10) - 5;
+                v[i] = getRandomFloat(0, 1);
 }
 
 

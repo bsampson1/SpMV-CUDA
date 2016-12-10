@@ -7,7 +7,7 @@ int main()
         // PARAMETERS
         double p_diag = 0.9;
         double p_nondiag = 0.001;
-        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu;//, *y_correct;
+        float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
 
@@ -17,11 +17,6 @@ int main()
         const int NUM_ITERS = 1;
 
         // Define cuda events
-        float milliseconds;
-        cudaEvent_t start, stop;
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
-        
         int N, iter;
         for (N = 2; N <= (1 << 15); N=N*2)
         {
@@ -36,6 +31,7 @@ int main()
                         
                         // Define output vector y
                         y_cpu = (float *)malloc(sizeof(float)*N);
+                        y_correct = (float *)malloc(sizeof(float)*N);
 
                         // Setup memory on the GPU
                         cudaMalloc((void**) &A_gpu, NNZ*sizeof(float));
@@ -63,19 +59,19 @@ int main()
                                 blocksPerGrid = N / 1024;
                         }
 
-                        // Start cudaEvent timing
-                        cudaEventRecord(start);
+                        // Simple SpMV CUDA kernel
+                        spmvSimple<<<blocksPerGrid, threadsPerBlock>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
                         
-                        // CUDA Kernel - compute spmv multiplication
-                        spmvSimple<<<blocksPerGrid, threadsPerBlock>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu); // supports well over 2^20
-                        
-                        cudaEventRecord(stop);
-                        cudaEventSynchronize(stop);
+                        // Transfer result back to host
+                        cudaMemcpy(y_cpu, y_gpu, N*sizeof(float), cudaMemcpyDeviceToHost);
 
-                        // Print result
-                        milliseconds = 0;
-                        cudaEventElapsedTime(&milliseconds, start, stop);
-                        printf("N = %i, time taken = %f\n", N, milliseconds);
+                        // Test correctness of CUDA kernel vs "golden" cpu spmv function
+                        cpuSpMV(y_correct, A_cpu, IA_cpu, JA_cpu, N, x_cpu);
+                        if (areEqualRMSE(y_correct, y_cpu, N))
+                                printf("GPU kernel result is correct for a (%ix%i)*(%ix1) spmv multiplication\n", N, N, N);
+                        else
+                                printf("GPU kernel result is NOT correct for a (%ix%i)*(%ix1) spmv multiplication\n", N, N, N);
+
 
                         // Free memory
                         free(A_cpu);
@@ -83,7 +79,7 @@ int main()
                         free(JA_cpu);
                         free(x_cpu);
                         free(y_cpu);
-                        //free(y_correct);
+                        free(y_correct);
                         cudaFree(A_gpu);
                         cudaFree(IA_gpu);
                         cudaFree(JA_gpu);

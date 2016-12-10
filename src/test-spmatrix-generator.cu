@@ -9,6 +9,9 @@ int main()
         int *IA, *JA;
         int NNZ;
 
+        // seed random number generator
+        time_t t; srand((unsigned) time(&t));
+        
         int N;
         for (N = 2; N <= (1 << 15); N*=2)
         {

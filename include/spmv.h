@@ -14,6 +14,15 @@ void cpuSpMV(float *y, float *A, int *IA, int *JA, const int M, const float *x);
  * CPU implementation of matrix-vector multiplication for sparse
 */
 
+bool areEqualRMSE(const float *a, const float *b, const int N);
+/* Checks whether the rmse between float array a and b are below
+ * some given rmse threshold. If it is, we can consider a and b 
+ * equal and if not, we can consider they not equal. Internal
+ * RMSE_THRESHOLD = 1e-5
+ *      a, b - input float vectors
+ *      N - length of vector
+ */
+
 __global__
 void spmvSimple(float * y, const float *A, const int *IA, const int *JA, const float *x);
 /* Sparse matrix-vector multiplication for GPU
@@ -47,6 +56,10 @@ void resizeSpMatrixArraysAndCopy(float **A_temp_p, int **JA_temp_p, int *bufferS
  *      JA_temp - array that holds the column indicies of sparse matrix in CSR format
  *      bufferSize - lengths of A_temp and JA_temp
  *      RESIZE_FACTOR - a constant determining the length of new temp arrays (should be > 1!)
+ */
+
+float getRandomFloat(const float min, const float max);
+/* Returns a quasi-uniformly distributed random float between min and max
  */
 
 void fillDenseVector(float* v, const int N);

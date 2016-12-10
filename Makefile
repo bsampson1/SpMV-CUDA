@@ -23,7 +23,7 @@ run-test-spmatrix-struct:
 	@./test-spmatrix-struct
 
 run-test-spmatrix-generator:
-	@./test-spmatrix-generator
+	@srun -N1 ./test-spmatrix-generator
 
 run-test-spmv-timing:
 	@srun -N1 --gres=gpu:1 ./test-spmv-timing

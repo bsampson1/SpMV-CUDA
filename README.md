@@ -1,4 +1,4 @@
-# sparse-matrix-vector-multiplication
+# SpMV-CUDA
 
 ## CPEG 655 Course Project
 

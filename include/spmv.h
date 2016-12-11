@@ -1,6 +1,8 @@
 #ifndef SPMV_H
 #define SPMV_H
 
+#define BLOCK_SIZE 1024
+
 void printArray(const float* arr, const int l);
 /* Used to print A array from CSR formatted sparse matrix
  */
@@ -24,7 +26,19 @@ bool areEqualRMSE(const float *a, const float *b, const int N);
  */
 
 __global__
-void spmvSimple(float * y, const float *A, const int *IA, const int *JA, const float *x);
+void spmvChocolate(float *y, const float *A, const int *IA, const int *JA, const float *x);
+/* Sparse matrix-vector multiplication for GPU
+ * One thread computes one element of output vector y
+ * but after loading to shared memory first
+ *      y - output vector (Mx1)
+ *      A - sparse matrix (MxN)
+ *      x - input vector (Nx1)
+ *      M - number of rows of A
+ *      NNZ - number of non-zero elements of A
+ */
+
+__global__
+void spmvVanilla(float *y, const float *A, const int *IA, const int *JA, const float *x);
 /* Sparse matrix-vector multiplication for GPU
  * One thread computes one element of output vector
  *      y - output vector (M x 1)

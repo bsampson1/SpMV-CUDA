@@ -4,9 +4,12 @@
 
 int main()
 {
+
+        printf("\n============================== TEST: SPMV CORRECTNESS =====================================\n\n");
+
         // PARAMETERS
         double p_diag = 0.9;
-        double p_nondiag = 0.001;
+        double p_nondiag = 0.1;
         float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
@@ -18,7 +21,7 @@ int main()
 
         // Define cuda events
         int N, iter;
-        for (N = 2; N <= (1 << 15); N=N*2)
+        for (N = (1 << 10); N <= (1 << 15); N=N*2)
         {
                 for (iter = 0; iter < NUM_ITERS; ++iter)
                 {
@@ -47,21 +50,24 @@ int main()
                         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
                         
                         // CUDA kernel parameters
-                        int threadsPerBlock, blocksPerGrid;
+                        int dB, dG;
                         if (N < 1024)
                         {
-                                threadsPerBlock = N;
-                                blocksPerGrid = 1;
+                                dB = N;
+                                dG = 1;
                         }
                         else
                         {
-                                threadsPerBlock = 1024;
-                                blocksPerGrid = N / 1024;
+                                dB = BLOCK_SIZE;
+                                dG = N / BLOCK_SIZE;
                         }
 
-                        // Simple SpMV CUDA kernel
-                        spmvSimple<<<blocksPerGrid, threadsPerBlock>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
+                        // Vanilla  SpMV CUDA kernel
+                        spmvVanilla<<< dG, dB >>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
                         
+                        // Chocolate SpMV CUDA kernel
+                        //spmvChocolate<<< dG, dB>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
+
                         // Transfer result back to host
                         cudaMemcpy(y_cpu, y_gpu, N*sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -89,5 +95,8 @@ int main()
         }
         
         cudaDeviceReset();
-	return 0;
+	
+        
+        printf("\n===========================================================================================\n\n");
+        return 0;
 }

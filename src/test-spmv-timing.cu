@@ -2,9 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/time.h>
 
 int main()
 {
+        printf("\n============================== TEST: SPMV TIMING ==========================================\n\n");
+
         // PARAMETERS
         double p_diag = 0.9;
         double p_nondiag = 0.1;
@@ -12,7 +15,7 @@ int main()
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
         int NNZ;
 
-        int expNmin = 1;
+        int expNmin = 10;
         int expNmax = 15;
         int Nmin = (1 << expNmin);
         int Nmax = (1 << expNmax);
@@ -21,18 +24,21 @@ int main()
         int *N_arr = (int *)malloc(sizeof(float)*L);
         int i; int idx = 0;
         for (i = 0; i < L; ++i)
-                N_arr[i] = (1 << (i+1));
+                N_arr[i] = (1 << (i+expNmin));
 
         // seed random number generator
         time_t t; srand((unsigned) time(&t));
 
         const int NUM_ITERS = 1;
 
-        // Define cuda events
+        // Define cuda events for GPU timing
         float milliseconds;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
+
+        // Setup CPU timing for cpuSpMV
+        //struct timeval t1, t2;
         
         int N, iter; double elapsed;
         for (N = Nmin; N <= Nmax; N=N*2)
@@ -65,23 +71,33 @@ int main()
                         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
                         
                         // CUDA kernel parameters
-                        int threadsPerBlock, blocksPerGrid;
+                        //int sMem = (1 << 15);
+                        int dB, dG;
                         if (N < 1024)
                         {
-                                threadsPerBlock = N;
-                                blocksPerGrid = 1;
+                                dB = N;
+                                dG = 1;
                         }
                         else
                         {
-                                threadsPerBlock = 1024;
-                                blocksPerGrid = N / 1024;
+                                dB = BLOCK_SIZE;
+                                dG = N / 1024;
                         }
+                        
+                        // Do CPU timing
+                        //gettimeofday(&t1, NULL);
+                        //cpuSpMV(y_cpu, A_cpu, IA_cpu, JA_cpu, N, x_cpu);
+                        //gettimeofday(&t2, NULL);
+                        //elapsed += (t2.tv_sec-t1.tv_sec)*1000.0 + (t2.tv_usec-t1.tv_usec)/1000.0; // in ms
 
                         // Start cudaEvent timing
                         cudaEventRecord(start);
                         
-                        // CUDA Simple SpMV Kernel
-                        spmvSimple<<<blocksPerGrid, threadsPerBlock>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
+                        // CUDA Vanilla SpMV Kernel
+                        //spmvVanilla<<<dG, dB>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
+
+                        // CUDA Chocolate SpMV Kernel
+                        spmvChocolate<<<dG, dB>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
                        
                         // Stop cudaEvent timing
                         cudaEventRecord(stop);
@@ -92,7 +108,7 @@ int main()
                         if (err != cudaSuccess)
                                 printf("Error: %s\n", cudaGetErrorString(err));
 
-                        // Print result
+                        // Record timing result
                         milliseconds = 0;
                         cudaEventElapsedTime(&milliseconds, start, stop);
                         elapsed += milliseconds;
@@ -118,10 +134,10 @@ int main()
                         cudaFree(x_gpu);
                         cudaFree(y_gpu);
                 }
-                //printf("Average performace of N = %i SpMV over %i iterations: %g ms\n", N, NUM_ITERS, elapsed/NUM_ITERS);
                 t_arr[idx++] = (float)elapsed/NUM_ITERS;
         }
 
+        printf("Results averaged over %i iterations with time in ms:\n", NUM_ITERS);
         printf("N = "); printArray(N_arr, L);
         printf("t = "); printArray(t_arr, L);
         
@@ -129,5 +145,9 @@ int main()
         free(N_arr);
 
         cudaDeviceReset();
-	return 0;
+	
+        
+        printf("\n===========================================================================================\n\n");
+
+        return 0;
 }

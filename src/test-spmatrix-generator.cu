@@ -4,8 +4,11 @@
 
 int main()
 {
+        printf("\n============================== TEST: SPARSE MATRIX GENERATOR ==============================\n\n");
+
+
         double p_diag = 0.9;
-        double p_nondiag = 1e-6;
+        double p_nondiag = 0.1;
         float *A;
         int *IA, *JA;
         int NNZ;
@@ -18,7 +21,7 @@ int main()
         double elapsedTime;
         
         int N;
-        for (N = 2; N <= (1 << 17); N*=2)
+        for (N = 2; N <= (1 << 15); N*=2)
         {
 
                 gettimeofday(&t1, NULL);
@@ -32,7 +35,7 @@ int main()
                 elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
                 elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
 
-                printf("Generated sparse matrix of size %ix%i and it took %g ms\n", N, N, elapsedTime);
+                printf("Successfully generated %ix%i sparse matrix in %g ms\n", N, N, elapsedTime);
 
                 // Free memory
                 free(A);
@@ -40,5 +43,6 @@ int main()
                 free(JA);
         }
 
+        printf("\n===========================================================================================\n\n");
         return 0;
 }

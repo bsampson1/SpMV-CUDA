@@ -6,7 +6,7 @@ int main()
 {
         // PARAMETERS
         double p_diag = 0.9;
-        double p_nondiag = 0.001;
+        double p_nondiag = 0.1;
         int N = (1 << 12);
         float *A_cpu, *A_gpu, *x_cpu, *x_gpu, *y_cpu, *y_gpu, *y_correct;
         int *IA_cpu, *IA_gpu, *JA_cpu, *JA_gpu;
@@ -54,23 +54,23 @@ int main()
         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
 
         // CUDA kernel parameters
-        int threadsPerBlock, blocksPerGrid;
+        int dB, dG;
         if (N < 1024)
         {
-                threadsPerBlock = N;
-                blocksPerGrid = 1;
+                dB = N;
+                dG = 1;
         }
         else
         {
-                threadsPerBlock = 1024;
-                blocksPerGrid = N / 1024;
+                dB = BLOCK_SIZE;
+                dG = N / BLOCK_SIZE;
         }
 
         // Start cudaEvent timing
         cudaEventRecord(start);
         
-        // CUDA Kernel - compute spmv multiplication
-        spmvSimple<<<blocksPerGrid, threadsPerBlock>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu); // supports well over 2^20
+        // Vanilla SpMV CUDA Kernel
+        spmvVanilla<<< dG, dB>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, x_gpu);
         
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);

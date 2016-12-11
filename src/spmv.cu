@@ -4,7 +4,31 @@
 #include <math.h>
 
 __global__
-void spmvSimple(float* y, const float *A, const int *IA, const int *JA, const float *x)
+void spmvChocolate(float* y, const float *A, const int *IA, const int *JA, const float *x)
+{
+        int row = threadIdx.x + blockDim.x * blockIdx.x;
+
+        __shared__ int IA_sh[BLOCK_SIZE+1];
+        __shared__ float y_sh[BLOCK_SIZE];
+       
+        // Load shared data from global to shared memory
+        IA_sh[threadIdx.x] = IA[row];
+        IA_sh[BLOCK_SIZE] = IA[blockDim.x*(blockIdx.x+1)];
+        y_sh[threadIdx.x] = y[row];
+        __syncthreads();
+
+        y_sh[threadIdx.x] = 0;
+        int j;
+        for (j = IA_sh[threadIdx.x]; j < IA_sh[threadIdx.x+1]; ++j)
+                y_sh[threadIdx.x] += A[j]*x[JA[j]];
+
+        // Return result from shared memory to global memory
+        y[row] = y_sh[threadIdx.x];
+        __syncthreads();
+}
+
+__global__
+void spmvVanilla(float* y, const float *A, const int *IA, const int *JA, const float *x)
 {
         int row = threadIdx.x + blockDim.x * blockIdx.x;
         y[row] = 0;
@@ -46,7 +70,7 @@ void printArray(const float* arr, const int l)
 void printArray(const int* arr, const int l)
 {
         int i;
-        printf("[ ");
+        printf("[");
         for (i = 0; i < l; ++i)
         {
                 printf("%i", arr[i]);

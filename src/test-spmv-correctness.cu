@@ -74,9 +74,9 @@ int main()
                         // Test correctness of CUDA kernel vs "golden" cpu spmv function
                         cpuSpMV(y_correct, A_cpu, IA_cpu, JA_cpu, N, x_cpu);
                         if (areEqualRMSE(y_correct, y_cpu, N))
-                                printf("GPU kernel result is correct for a (%ix%i)*(%ix1) spmv multiplication\n", N, N, N);
+                                printf("GPU SpMV result is correct for a (%ix%i)*(%ix1) SpMV multiplication\n", N, N, N);
                         else
-                                printf("GPU kernel result is NOT correct for a (%ix%i)*(%ix1) spmv multiplication\n", N, N, N);
+                                printf("GPU SpMV result is NOT correct for a (%ix%i)*(%ix1) SpMV multiplication\n", N, N, N);
 
 
                         // Free memory

@@ -65,7 +65,7 @@ int main()
                 spmvCPU(y_cpu_correct, A_cpu, IA_cpu, JA_cpu, M, x_cpu);
 
                 // Strawberry SpMV CUDA kernel
-                spmvStrawberry<<< dG, dB, 32768 >>>(y_gpu_strawberry, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
+                spmvStrawberry<<< dG, dB >>>(y_gpu_strawberry, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
 
                 // Transfer result back to host
                 cudaMemcpy(y_cpu_strawberry, y_gpu_strawberry, M*sizeof(float), cudaMemcpyDeviceToHost);

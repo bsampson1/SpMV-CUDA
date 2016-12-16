@@ -12,11 +12,11 @@ void spmvStrawberry(    float *y,
                         const float *x)
 {
         
-        extern __shared__ float t_sum[]; // thread sum
+        __shared__ float t_sum[BLOCK_SIZE]; // thread sum
         int j;
 
-        int t_id = threadIdx.x + blockDim.x * blockIdx.x; // global thread index
-        int w_id = t_id / 32; // global warp index
+        int t_id = threadIdx.x + blockDim.x * blockIdx.x; // thread id
+        int w_id = t_id / 32; // warp id
         int t_warp = t_id & 31; // thread number within a given warp
         
         // one warp per row

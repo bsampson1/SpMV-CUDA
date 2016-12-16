@@ -7,11 +7,11 @@
 int main()
 {
         // Do gettimeofday timing for estimating execution time of main
-        struct timeval t1_main, t2_main, t1, t2;
+        struct timeval t1_main, t2_main;//, t1, t2;
         double elapsedMain;
         gettimeofday(&t1_main, NULL);
 
-        printf("Running main using SpMV CPU Implementation\n");
+        printf("Running main using spmvStrawberry\n");
 
         // PARAMETERS
         double p_diag = 0.9;
@@ -37,11 +37,17 @@ int main()
         const int NUM_ITERS = 20;
 
         // Define cuda events for GPU timing
-        //float milliseconds;
-        //cudaEvent_t start, stop;
-        //cudaEventCreate(&start);
-        //cudaEventCreate(&stop);
+        float milliseconds;
+        cudaEvent_t start, stop;
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
         
+        // Define CudaError
+        cudaError_t err;
+
+        // Define CUDA kernel parameters
+        int dB, dG, dB_strawberry, dG_strawberry;
+
         int M, N, iter; double elapsed;
         for (M = Mmin; M <= Mmax; M=M*2)
         {
@@ -73,28 +79,20 @@ int main()
                         cudaMemcpy(JA_gpu, JA_cpu, NNZ*sizeof(int), cudaMemcpyHostToDevice);
                         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
                         
-                        // CUDA kernel parameters
-                        //int sMem = (1 << 15);
-                        //int dB, dG;
-                        //if (N < 1024)
-                        //{
-                        //        dB = N;
-                        //        dG = 1;
-                        //}
-                        //else
-                        //{
-                        //        dB = BLOCK_SIZE;
-                        //        dG = N / 1024;
-                        //}
+                        // Set CUDA kernel parameters
+                        dB = BLOCK_SIZE;
+                        dG = N / 1024;
+                        dB_strawberry = BLOCK_SIZE;
+                        dG_strawberry = M / BLOCK_SIZE * 32;
                         
                         // Do CPU timing
-                        gettimeofday(&t1, NULL);
-                        spmvCPU(y_cpu, A_cpu, IA_cpu, JA_cpu, M, x_cpu);
-                        gettimeofday(&t2, NULL);
-                        elapsed += (t2.tv_sec-t1.tv_sec)*1000.0 + (t2.tv_usec-t1.tv_usec)/1000.0; // in ms
+                        //gettimeofday(&t1, NULL);
+                        //spmvCPU(y_cpu, A_cpu, IA_cpu, JA_cpu, M, x_cpu);
+                        //gettimeofday(&t2, NULL);
+                        //elapsed += (t2.tv_sec-t1.tv_sec)*1000.0 + (t2.tv_usec-t1.tv_usec)/1000.0; // in ms
 
                         // Start cudaEvent timing
-                        //cudaEventRecord(start);
+                        cudaEventRecord(start);
                         
                         // CUDA Vanilla SpMV Kernel
                         //spmvVanilla<<<dG, dB>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
@@ -102,27 +100,33 @@ int main()
                         // CUDA Chocolate SpMV Kernel
                         //spmvChocolate<<<dG, dB>>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
                        
+                        // CUDA Strawberry SpMV Kernel
+                        spmvStrawberry<<< dG_strawberry, dB_strawberry >>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
+
                         // Stop cudaEvent timing
-                        //cudaEventRecord(stop);
-                        //cudaEventSynchronize(stop);
+                        cudaEventRecord(stop);
+                        cudaEventSynchronize(stop);
 
                         // Check to make sure that cuda kernel was successful
-                        //cudaError_t err = cudaGetLastError();
-                        //if (err != cudaSuccess)
-                        //        printf("Error: %s\n", cudaGetErrorString(err));
+                        err = cudaGetLastError();
+                        if (err != cudaSuccess)
+                                printf("Error: %s\n", cudaGetErrorString(err));
 
                         // Record timing result
-                        //milliseconds = 0;
-                        //cudaEventElapsedTime(&milliseconds, start, stop);
-                        //elapsed += milliseconds;
+                        milliseconds = 0;
+                        cudaEventElapsedTime(&milliseconds, start, stop);
+                        elapsed += milliseconds;
 
                         // Transfer result back to host
                         cudaMemcpy(y_cpu, y_gpu, N*sizeof(float), cudaMemcpyDeviceToHost);
 
                         // Test correctness of CUDA kernel vs "golden" cpu spmv function
-                        //cpuSpMV(y_correct, A_cpu, IA_cpu, JA_cpu, N, x_cpu);
-                        //if (!areEqualRMSE(y_correct, y_cpu, N))
-                        //        printf("Not correct result for a (%ix%i)*(%ix1) spmv multiplication\n", M, N, N);
+                        spmvCPU(y_correct, A_cpu, IA_cpu, JA_cpu, N, x_cpu);
+                        if (!areEqualRMSE(y_correct, y_cpu, N))
+                        {
+                                printf("Not correct result for a (%ix%i)*(%ix1) spmv multiplication\n", M, N, N);
+                                printRMSE(y_correct, y_cpu, N);
+                        }
 
                         // Free memory
                         free(A_cpu);

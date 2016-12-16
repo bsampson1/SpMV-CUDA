@@ -3,43 +3,105 @@
 #include <stdlib.h>
 #include <math.h>
 
-__global__
-void spmvChocolate(float* y, const float *A, const int *IA, const int *JA, const float *x)
+__global__ 
+void spmvStrawberry(    float *y, 
+                        const float *A, 
+                        const int *IA,
+                        const int *JA,
+                        const int M,
+                        const float *x)
 {
-        int row = threadIdx.x + blockDim.x * blockIdx.x;
+        
+        extern __shared__ float t_sum[]; // thread sum
+        int j;
 
+        int t_id = threadIdx.x + blockDim.x * blockIdx.x; // global thread index
+        int w_id = t_id / 32; // global warp index
+        int t_warp = t_id & 31; // thread number within a given warp
+        
+        // one warp per row
+        int row = w_id;
+
+        // don't compute for a row value greater than the total in our matrix!
+        if (row < M){
+
+                // compute running sum per thread
+                t_sum[threadIdx.x] = 0;
+
+                for (j = IA[row] + t_warp; j < IA[row+1]; j += 32)
+                        t_sum[threadIdx.x] += A[j] * x[JA[j]];
+
+                // Add individual thread sums within a warp together
+                // Final result for a row will be stored in the first thread
+                // within each warp
+                if (t_warp < 16) t_sum[threadIdx.x] += t_sum[threadIdx.x+16];
+                if (t_warp < 8) t_sum[threadIdx.x] += t_sum[threadIdx.x+8];
+                if (t_warp < 4) t_sum[threadIdx.x] += t_sum[threadIdx.x+4];
+                if (t_warp < 2) t_sum[threadIdx.x] += t_sum[threadIdx.x+2];
+                if (t_warp < 1) t_sum[threadIdx.x] += t_sum[threadIdx.x+1];
+                
+                // first thread within warp writes result to y
+                if (t_warp == 0)
+                        y[row] = t_sum[threadIdx.x];
+        
+        }
+}
+
+__global__
+void spmvChocolate(     float* y,
+                        const float *A,
+                        const int *IA,
+                        const int *JA,
+                        const int M,
+                        const float *x)
+{
         __shared__ int IA_sh[BLOCK_SIZE+1];
         __shared__ float y_sh[BLOCK_SIZE];
-       
-        // Load shared data from global to shared memory
-        IA_sh[threadIdx.x] = IA[row];
-        IA_sh[BLOCK_SIZE] = IA[blockDim.x*(blockIdx.x+1)];
-        y_sh[threadIdx.x] = y[row];
-        __syncthreads();
 
-        y_sh[threadIdx.x] = 0;
         int j;
-        for (j = IA_sh[threadIdx.x]; j < IA_sh[threadIdx.x+1]; ++j)
-                y_sh[threadIdx.x] += A[j]*x[JA[j]];
+        int row = threadIdx.x + blockDim.x * blockIdx.x;
 
-        // Return result from shared memory to global memory
-        y[row] = y_sh[threadIdx.x];
+        // don't compute for a row value greater than the total in our matrix!
+        if (row < M)
+        {
+                // Load shared data from global to shared memory
+                IA_sh[threadIdx.x] = IA[row];
+                IA_sh[BLOCK_SIZE] = IA[blockDim.x*(blockIdx.x+1)];
+                y_sh[threadIdx.x] = y[row];
+                __syncthreads();
+
+                y_sh[threadIdx.x] = 0;
+                for (j = IA_sh[threadIdx.x]; j < IA_sh[threadIdx.x+1]; ++j)
+                        y_sh[threadIdx.x] += A[j]*x[JA[j]];
+
+                // Return result from shared memory to global memory
+                y[row] = y_sh[threadIdx.x];
+        }
         __syncthreads();
 }
 
 __global__
-void spmvVanilla(float* y, const float *A, const int *IA, const int *JA, const float *x)
+void spmvVanilla(       float* y,
+                        const float *A,
+                        const int *IA,
+                        const int *JA,
+                        const int M,
+                        const float *x)
 {
-        int row = threadIdx.x + blockDim.x * blockIdx.x;
-        y[row] = 0;
         int j;
-        for (j = IA[row]; j < IA[row+1]; ++j)
-                y[row] += A[j]*x[JA[j]];
-
+        int row = threadIdx.x + blockDim.x * blockIdx.x;
+        
+        // don't compute for a row greater than the total number in our matrix!
+        if (row < M)
+        {
+                y[row] = 0;
+                for (j = IA[row]; j < IA[row+1]; ++j)
+                        y[row] += A[j]*x[JA[j]];
+        }
         __syncthreads();
 }
 
-void cpuSpMV(float *y, float *A, int *IA, int *JA, const int M, const float *x)
+void spmvCPU(float *y, float *A, int *IA, int *JA, const int M, const float *x)
 {
         int i, j;
         float sum;
@@ -90,11 +152,19 @@ bool areEqualRMSE(const float *a, const float *b, const int N)
                 sq_err_sum += (a[i] - b[i])*(a[i] - b[i]);
         }
         rmse = sqrt(sq_err_sum/N);
-        
-        if (rmse > RMSE_THRESHOLD)
-                printf("RMSE = %g\n", rmse);
-
         return rmse < RMSE_THRESHOLD;
+}
+
+void printRMSE(const float *a, const float *b, const int N)
+{
+        double sq_err_sum = 0; double rmse;
+        int i;
+        for (i = 0; i < N; ++i)
+        {
+                sq_err_sum += (a[i] - b[i])*(a[i] - b[i]);
+        }
+        rmse = sqrt(sq_err_sum/N);
+        printf("RMSE = %g\n", rmse);
 }
 
 void printSpMatrix(const float* A, const int* IA, const int* JA, const int M, const int N)

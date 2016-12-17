@@ -6,12 +6,16 @@
 
 int main()
 {
+        // Set CUDA to prefer L1 cache over shared memory
+        // Will set L1 cache to 48K and shared memory to 16K if possible
+        cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+
         // Do gettimeofday timing for estimating execution time of main
         struct timeval t1_main, t2_main;//, t1, t2;
         double elapsedMain;
         gettimeofday(&t1_main, NULL);
 
-        printf("Running main using spmvStrawberry\n");
+        printf("Running main using spmvStrawberry with block size %i\n", BLOCK_SIZE);
 
         // PARAMETERS
         double p_diag = 0.9;
@@ -34,7 +38,7 @@ int main()
         // seed random number generator
         time_t t; srand((unsigned) time(&t));
 
-        const int NUM_ITERS = 20;
+        const int NUM_ITERS = 1;
 
         // Define cuda events for GPU timing
         float milliseconds;
@@ -46,7 +50,8 @@ int main()
         cudaError_t err;
 
         // Define CUDA kernel parameters
-        int dB, dG, dB_strawberry, dG_strawberry;
+        //int dB, dG;
+        int dB_strawberry, dG_strawberry;
 
         int M, N, iter; double elapsed;
         for (M = Mmin; M <= Mmax; M=M*2)
@@ -80,8 +85,8 @@ int main()
                         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
                         
                         // Set CUDA kernel parameters
-                        dB = BLOCK_SIZE;
-                        dG = N / 1024;
+                        //dB = BLOCK_SIZE;
+                        //dG = N / 1024;
                         dB_strawberry = BLOCK_SIZE;
                         dG_strawberry = M / BLOCK_SIZE * 32;
                         

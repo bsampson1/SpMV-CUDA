@@ -1,7 +1,7 @@
 #ifndef SPMV_H
 #define SPMV_H
 
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE 64
 
 void printArray(const float* arr, const int l);
 /* Prints float array of length l

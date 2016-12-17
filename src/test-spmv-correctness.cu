@@ -57,17 +57,10 @@ int main()
                         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
                         
                         // CUDA kernel parameters
-                        int dB, dG;
-                        if (N < 1024)
-                        {
-                                dB = N;
-                                dG = 1;
-                        }
-                        else
-                        {
-                                dB = BLOCK_SIZE;
-                                dG = N / BLOCK_SIZE;
-                        }
+                        int dB = BLOCK_SIZE;
+                        int dG = M / BLOCK_SIZE;
+                        int dB_strawberry = BLOCK_SIZE;
+                        int dG_strawberry = M / BLOCK_SIZE * 32;
 
                         // CPU SpMV kernel
                         spmvCPU(y_cpu_correct, A_cpu, IA_cpu, JA_cpu, M, x_cpu);
@@ -79,7 +72,7 @@ int main()
                         spmvChocolate<<< dG, dB >>>(y_gpu_chocolate, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
 
                         // Strawberry SpMV CUDA kernel
-                        spmvStrawberry<<< dG, dB, 32768 >>>(y_gpu_strawberry, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
+                        spmvStrawberry<<< dG_strawberry, dB_strawberry >>>(y_gpu_strawberry, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
 
                         // Transfer result back to host
                         cudaMemcpy(y_cpu_vanilla, y_gpu_vanilla, M*sizeof(float), cudaMemcpyDeviceToHost);
@@ -87,15 +80,15 @@ int main()
                         cudaMemcpy(y_cpu_strawberry, y_gpu_strawberry, M*sizeof(float), cudaMemcpyDeviceToHost);
 
                         // Test correctness of SpMV CUDA kernel flavors  vs "golden" cpu spmv function
-                        if (areEqualRMSE(y_cpu_correct, y_cpu_vanilla, N))
+                        if (areEqualRMSE(y_cpu_correct, y_cpu_vanilla, M))
                                 printf("spmvVanilla is correct for a (%ix%i)*(%ix1) SpMV multiplication\n", M, N, N);
                         else
                                 printf("spmvVanilla is NOT correct for a (%ix%i)*(%ix1) SpMV multiplication\n", M, N, N);
-                        if (areEqualRMSE(y_cpu_correct, y_cpu_chocolate, N))
+                        if (areEqualRMSE(y_cpu_correct, y_cpu_chocolate, M))
                                 printf("spmvChocolate is correct for a (%ix%i)*(%ix1) SpMV multiplication\n", M, N, N);
                         else
                                 printf("spmvChocolate is NOT correct for a (%ix%i)*(%ix1) SpMV multiplication\n", M, N, N);
-                        if (areEqualRMSE(y_cpu_correct, y_cpu_strawberry, N))
+                        if (areEqualRMSE(y_cpu_correct, y_cpu_strawberry, M))
                                 printf("spmvStrawberry is correct for a (%ix%i)*(%ix1) SpMV multiplication\n", M, N, N);
                         else
                                 printf("spmvStrawberry is NOT correct for a (%ix%i)*(%ix1) SpMV multiplication\n", M, N, N);

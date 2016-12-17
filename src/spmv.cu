@@ -3,29 +3,25 @@
 #include <stdlib.h>
 #include <math.h>
 
-__global__ 
-void spmvStrawberry(    float *y, 
-                        const float *A, 
+__global__
+void spmvNeapolitan(    float *y,
+                        const float *A,
                         const int *IA,
                         const int *JA,
                         const int M,
                         const float *x)
 {
-        
         __shared__ float t_sum[BLOCK_SIZE]; // thread sum
         int j;
 
         int t_id = threadIdx.x + blockDim.x * blockIdx.x; // thread id
-        int w_id = t_id / 32; // warp id
+        int row = t_id / 32; // one warp per row
         int t_warp = t_id & 31; // thread number within a given warp
-        
-        // one warp per row
-        int row = w_id;
 
         // don't compute for a row value greater than the total in our matrix!
         if (row < M){
 
-                // compute running sum per thread
+                // compute running sum per thread in warp
                 t_sum[threadIdx.x] = 0;
 
                 for (j = IA[row] + t_warp; j < IA[row+1]; j += 32)
@@ -43,7 +39,38 @@ void spmvStrawberry(    float *y,
                 // first thread within warp writes result to y
                 if (t_warp == 0)
                         y[row] = t_sum[threadIdx.x];
+        }
+}
+
+__global__ 
+void spmvStrawberry(float *y, const float *A, const int *IA, const int *JA, const int M, const float *x)
+{
+        __shared__ float t_sum[BLOCK_SIZE]; // thread sum
+        int j;
+
+        int t_id = threadIdx.x + blockDim.x * blockIdx.x; // thread id
+        int row = t_id / 32; // one warp per row
+        int t_warp = t_id & 31; // thread number within a given warp
         
+        // don't compute for a row value greater than the total in our matrix!
+        if (row < M){
+
+                // compute running sum per thread in warp
+                t_sum[threadIdx.x] = 0;
+
+                for (j = IA[row] + t_warp; j < IA[row+1]; j += 32)
+                        t_sum[threadIdx.x] += A[j] * x[JA[j]];
+
+                // Parallel reduction of result in shared memory for one warp
+                if (t_warp < 16) t_sum[threadIdx.x] += t_sum[threadIdx.x+16];
+                if (t_warp < 8) t_sum[threadIdx.x] += t_sum[threadIdx.x+8];
+                if (t_warp < 4) t_sum[threadIdx.x] += t_sum[threadIdx.x+4];
+                if (t_warp < 2) t_sum[threadIdx.x] += t_sum[threadIdx.x+2];
+                if (t_warp < 1) t_sum[threadIdx.x] += t_sum[threadIdx.x+1];
+                
+                // first thread within warp contains desired y[row] result so write it to y
+                if (t_warp == 0)
+                        y[row] = t_sum[threadIdx.x];
         }
 }
 

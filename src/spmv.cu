@@ -3,45 +3,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-__global__
-void spmvNeapolitan(    float *y,
-                        const float *A,
-                        const int *IA,
-                        const int *JA,
-                        const int M,
-                        const float *x)
-{
-        __shared__ float t_sum[BLOCK_SIZE]; // thread sum
-        int j;
-
-        int t_id = threadIdx.x + blockDim.x * blockIdx.x; // thread id
-        int row = t_id / 32; // one warp per row
-        int t_warp = t_id & 31; // thread number within a given warp
-
-        // don't compute for a row value greater than the total in our matrix!
-        if (row < M){
-
-                // compute running sum per thread in warp
-                t_sum[threadIdx.x] = 0;
-
-                for (j = IA[row] + t_warp; j < IA[row+1]; j += 32)
-                        t_sum[threadIdx.x] += A[j] * x[JA[j]];
-
-                // Add individual thread sums within a warp together
-                // Final result for a row will be stored in the first thread
-                // within each warp
-                if (t_warp < 16) t_sum[threadIdx.x] += t_sum[threadIdx.x+16];
-                if (t_warp < 8) t_sum[threadIdx.x] += t_sum[threadIdx.x+8];
-                if (t_warp < 4) t_sum[threadIdx.x] += t_sum[threadIdx.x+4];
-                if (t_warp < 2) t_sum[threadIdx.x] += t_sum[threadIdx.x+2];
-                if (t_warp < 1) t_sum[threadIdx.x] += t_sum[threadIdx.x+1];
-                
-                // first thread within warp writes result to y
-                if (t_warp == 0)
-                        y[row] = t_sum[threadIdx.x];
-        }
-}
-
 __global__ 
 void spmvStrawberry(float *y, const float *A, const int *IA, const int *JA, const int M, const float *x)
 {
@@ -171,7 +132,7 @@ void printArray(const int* arr, const int l)
 
 bool areEqualRMSE(const float *a, const float *b, const int N)
 {
-        double RMSE_THRESHOLD = 1e-3;
+        const double RMSE_THRESHOLD = 1e-3;
         double sq_err_sum = 0; double rmse;
         int i;
         for (i = 0; i < N; ++i)

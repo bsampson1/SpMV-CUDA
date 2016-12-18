@@ -8,7 +8,7 @@ int main()
 {
         printf("\n============================== TEST: SPMV TIMING ==========================================\n\n");
 
-        printf("Running spmvChocolate with BLOCK_SIZE = %i\n", BLOCK_SIZE);
+        printf("Running spmvVanilla with BLOCK_SIZE = %i\n", BLOCK_SIZE);
 
         // PARAMETERS
         double p_diag = 0.9;
@@ -73,9 +73,10 @@ int main()
                         cudaMemcpy(x_gpu, x_cpu, N*sizeof(float), cudaMemcpyHostToDevice);
                         
                         // CUDA kernel parameters
-                        int dB, dG;
-                        dB = BLOCK_SIZE;
-                        dG = M / BLOCK_SIZE;
+                        int dB = BLOCK_SIZE;
+                        int dG = M / BLOCK_SIZE;
+                        //int dB_strawberry = BLOCK_SIZE;
+                        //int dG_strawberry = M / BLOCK_SIZE * 32;
                         
                         // Do CPU timing
                         //gettimeofday(&t1, NULL);
@@ -87,11 +88,14 @@ int main()
                         cudaEventRecord(start);
                         
                         // CUDA Vanilla SpMV Kernel
-                        spmvVanilla<<< dG, dB >>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M,  x_gpu);
+                        spmvVanilla<<< dG, dB >>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
 
                         // CUDA Chocolate SpMV Kernel
                         //spmvChocolate<<< dG, dB >>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
-                       
+                      
+                        // CUDA Strawberry SpMV Kernel
+                        //spmvStrawberry<<< dG_strawberry, dB_strawberry >>>(y_gpu, A_gpu, IA_gpu, JA_gpu, M, x_gpu);
+
                         // Stop cudaEvent timing
                         cudaEventRecord(stop);
                         cudaEventSynchronize(stop);

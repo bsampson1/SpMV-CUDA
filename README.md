@@ -9,10 +9,10 @@ the course project in CPEG655: High Performance Computing with
 Commodity Hardware.
 
 Project Features:
-        - Sparse matrix generation up to 2^15x2^15
-        - Several SpMV cuda kernel "flavors"
-        - CPU SpMV implementation
-        - Tests for sparse matrix generation, timing, RMSE
+* Sparse matrix generation up to 2^15x2^15
+* Several SpMV cuda kernel "flavors"
+* CPU SpMV implementation
+* Tests for sparse matrix generation, timing, RMSE
           calculation, and SpMV correctness
 
 ### Compiling and Executing Code

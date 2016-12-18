@@ -4,7 +4,12 @@
 #include <math.h>
 
 __global__ 
-void spmvStrawberry(float *y, const float *A, const int *IA, const int *JA, const int M, const float *x)
+void spmvStrawberry(    float *y,
+                        const float *A,
+                        const int *IA,
+                        const int *JA,
+                        const int M,
+                        const float *x)
 {
         __shared__ float t_sum[BLOCK_SIZE]; // thread sum
         int j;
@@ -184,16 +189,11 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
         // but are same for a given realization
         int estSize = N*p_diag + N*(N-1)*p_nondiag;
         
-        //printf("Estimate size of A: %i\n", estSize);
-        //printf("Size of IA: %i\n", N+1);
-        //printf("Estimate size of JA: %i\n", estSize);
-        
         // allocate IA because size is fixed (size of IA = N + 1)
         *IA_p = (int *)malloc(sizeof(int)*(N+1));
         
         // define buffer space for undetermined arrays
         int bufferSize = (int)ceil(1.33*estSize);
-        //printf("Buffer size = %i\n", bufferSize);
         
         // allocate buffer*estSize for A & JA so we can probably fit everything in those
         float* A_temp = (float *)malloc(sizeof(float)*bufferSize);
@@ -219,8 +219,6 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
                                         if((*NNZ_p) == bufferSize) // Placing element will exceed allowed buffer!
                                         {
                                                 resizeSpMatrixArraysAndCopy(&A_temp, &JA_temp, &bufferSize, 1.33); // resize arrays so we can insert element!
-                                                //printf("Error: Exceeded allowed buffer size. Failed to create sparse matrix!\n");
-                                                //return;
                                         }
                                         
                                         // Place random non-zero element into sparse matrix
@@ -238,8 +236,6 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
                                         if((*NNZ_p) == bufferSize) // Placing element will exceed allowed buffer!
                                         {
                                                 resizeSpMatrixArraysAndCopy(&A_temp, &JA_temp, &bufferSize, 1.33); // resize arrays so we can insert element!
-                                                //printf("Error: Exceeded allowed buffer size. Failed to create sparse matrix!\n");
-                                                //return;
                                         }
                                         
                                         // Place random non-zero element into sparse matrix
@@ -254,10 +250,6 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
                 }
         }
 
-        //printf("A_temp: "); printArray(A_temp, bufferSize);
-        //printf("IA: "); printArray(*IA_p, N+1);
-        //printf("JA_temp: "); printArray(JA_temp, bufferSize);
-
         // By this point we have not exceeded memory limit so lets create
         // actual A and IA array now that we have determined the size
         *A_p = (float *)malloc(sizeof(float)*(*NNZ_p));
@@ -270,11 +262,6 @@ void generateSquareSpMatrix(float **A_p, int **IA_p, int **JA_p, int *NNZ_p, con
                 (*JA_p)[i] = JA_temp[i];
         }
         
-        //printf("A: "); printArray(*A_p, *NNZ_p);
-        //printf("IA: "); printArray(*IA_p, N+1);
-        //printf("JA: "); printArray(*JA_p, *NNZ_p);
-        //printf("NNZ: %i\n", *NNZ_p);
-       
         // free no longer used temp arrays
         free(A_temp); A_temp = NULL;
         free(JA_temp); JA_temp = NULL;

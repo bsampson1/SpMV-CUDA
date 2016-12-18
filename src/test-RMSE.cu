@@ -27,6 +27,7 @@ int main()
 
         printf("a = "); printArray(a, N);
         printf("b = "); printArray(b, N);
+        printRMSE(a, b, N);
 
         if(areEqualRMSE(a, b, N))
                 printf("They are equal in the sense that the RMSE of a-b is below RMSE error threshold\n\n");
@@ -39,6 +40,7 @@ int main()
 
         printf("a = "); printArray(a, N);
         printf("b = "); printArray(b, N);
+        printRMSE(a, b, N);
 
         if(areEqualRMSE(a, b, N))
                 printf("They are equal in the sense that the RMSE of a-b is below RMSE error threshold\n\n");
@@ -51,6 +53,7 @@ int main()
 
         printf("a = "); printArray(a, N);
         printf("b = "); printArray(b, N);
+        printRMSE(a, b, N);
 
         if(areEqualRMSE(a, b, N))
                 printf("They are equal in the sense that the RMSE of a-b is below RMSE error threshold\n\n");
@@ -63,6 +66,7 @@ int main()
 
         printf("a = "); printArray(a, N);
         printf("b = "); printArray(b, N);
+        printRMSE(a, b, N);
 
         if(areEqualRMSE(a, b, N))
                 printf("They are equal in the sense that the RMSE of a-b is below RMSE error threshold\n\n");

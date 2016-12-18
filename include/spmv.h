@@ -21,7 +21,7 @@ void spmvCPU(   float *y,
 */
 
 bool areEqualRMSE(const float *a, const float *b, const int N);
-/* Checks whether the rmse between float array a and b are below
+/* Checks if the rmse between float array a and b are below
  * some given rmse threshold. If it is, we can consider a and b 
  * equal and if not, we can consider they not equal. Internal
  * RMSE_THRESHOLD = 1e-3
@@ -39,8 +39,9 @@ void spmvStrawberry(    float *y,
                         const int M,
                         const float *x);
 /* Sparse matrix vector multiplication for GPU
- * One warp computes one row of the matrix with slight
- * shared memory usage but using vector operations
+ * One warp computes one row of the matrix with shared memory
+ * usage. Makes consecutive accesses to A and JA arrays which
+ * improves performance dramatically
  */
 
 __global__
@@ -52,7 +53,7 @@ void spmvChocolate(     float *y,
                         const float *x);
 /* Sparse matrix-vector multiplication for GPU
  * One thread computes one element of output vector y
- * but after loading to shared memory first
+ * but after loading IA and y to shared memory first
  */
 
 __global__
